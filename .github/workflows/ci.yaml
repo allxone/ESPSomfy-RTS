@@ -67,21 +67,6 @@ jobs:
             chip: ESP32
             fqbn: esp32:esp32:esp32
             name: ESP32
-          - board: lolin_c3_mini
-            addr_bootloader: 0x0
-            chip: ESP32-C3
-            fqbn: esp32:esp32:lolin_c3_mini
-            name: LOLIN-C3-mini
-          - board: lolin_s2_mini
-            addr_bootloader: 0x1000
-            chip: ESP32-S2
-            fqbn: esp32:esp32:lolin_s2_mini
-            name: LOLIN-S2-mini
-          - board: lolin_s3_mini
-            addr_bootloader: 0x0
-            chip: ESP32-S3
-            fqbn: esp32:esp32:lolin_s3_mini
-            name: LOLIN-S3-mini
 
     steps:
       - name: Check out code

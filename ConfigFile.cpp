@@ -587,7 +587,7 @@ bool ShadeConfigFile::restoreFile(SomfyShadeController *s, const char *filename,
   else {
     this->file.seek(this->file.position() + this->header.settingsRecordSize, SeekSet);
   }
-  if(opts.network || opts.mqtt) {
+  if(opts.network || opts.mqtt || opts.patronus) {
     this->readNetRecord(opts);
   }
   else {
@@ -607,6 +607,7 @@ bool ShadeConfigFile::restoreFile(SomfyShadeController *s, const char *filename,
     settings.Ethernet.save();
   }
   if(opts.mqtt) settings.MQTT.save();
+  if(opts.patronus) settings.Patronus.save();  
   return true;
 }
 bool ShadeConfigFile::readNetRecord(restore_options_t &opts) {
@@ -653,6 +654,12 @@ bool ShadeConfigFile::readNetRecord(restore_options_t &opts) {
         this->skipValue(6); // pubDisco
         this->skipValue(sizeof(settings.MQTT.rootTopic));
         this->skipValue(sizeof(settings.MQTT.discoTopic));
+      }
+      if(opts.patronus) {
+        settings.Patronus.maxiaq = this->readUInt16(150);
+      }
+      else {
+        this->skipValue(6); // maxiaq
       }
     }
     // Now lets check to see if we are the same board.  If we are then we will restore

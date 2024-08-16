@@ -8,6 +8,7 @@
 #include "Utils.h"
 #include "Somfy.h"
 #include "MQTT.h"
+#include "Patronus.h"
 #include "GitOTA.h"
 
 ConfigSettings settings;
@@ -17,6 +18,7 @@ Network net;
 rebootDelay_t rebootDelay;
 SomfyShadeController somfy;
 MQTTClass mqtt;
+PatronusClass patronus;
 GitUpdater git;
 
 uint32_t oldheap = 0;

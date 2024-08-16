@@ -12,6 +12,7 @@
 #include "WResp.h"
 #include "Web.h"
 #include "MQTT.h"
+#include "Patronus.h"
 #include "GitOTA.h"
 #include "Network.h"
 
@@ -21,6 +22,7 @@ extern rebootDelay_t rebootDelay;
 extern SomfyShadeController somfy;
 extern Web webServer;
 extern MQTTClass mqtt;
+extern PatronusClass patronus;
 extern GitUpdater git;
 extern Network net;
 
@@ -2061,6 +2063,7 @@ void Web::begin() {
         }
         else {
           somfy.transceiver.end(); // Shut down the radio so we do not get any interrupts during this process.
+          patronus.end();
           mqtt.end();
         }
       }
@@ -2136,6 +2139,7 @@ void Web::begin() {
         }
         else {
           somfy.transceiver.end(); // Shut down the radio so we do not get any interrupts during this process.
+          patronus.end();
           mqtt.end();
         }
       }
@@ -2572,6 +2576,36 @@ void Web::begin() {
       }
     }
     });
+  server.on("/connectpatronus", []() {
+    if(server.method() == HTTP_OPTIONS) { server.send(200, "OK"); return; }
+    DynamicJsonDocument doc(1024);
+    DeserializationError err = deserializeJson(doc, server.arg("plain"));
+    if (err) {
+      webServer.handleDeserializationError(server, err);
+      return;
+    }
+    else {
+      JsonObject obj = doc.as<JsonObject>();
+      HTTPMethod method = server.method();
+      Serial.print("Saving Patronus ");
+      Serial.print(F("HTTP Method: "));
+      Serial.println(server.method());
+      if (method == HTTP_POST || method == HTTP_PUT) {
+        patronus.disconnect();
+        settings.Patronus.fromJSON(obj);
+        settings.Patronus.save();
+        JsonResponse resp;
+        resp.beginResponse(&server, g_content, sizeof(g_content));
+        resp.beginObject();
+        settings.Patronus.toJSON(resp);
+        resp.endObject();
+        resp.endResponse();
+      }
+      else {
+        server.send(201, "application/json", "{\"status\":\"ERROR\",\"desc\":\"Invalid HTTP Method: \"}");
+      }
+    }
+    });
   server.on("/mqttsettings", []() {
     webServer.sendCORSHeaders(server);
     JsonResponse resp;
@@ -2588,6 +2622,15 @@ void Web::begin() {
     serializeJson(doc, g_content);
     server.send(200, _encoding_json, g_content);
     */
+    });
+  server.on("/patronussettings", []() {
+    webServer.sendCORSHeaders(server);
+    JsonResponse resp;
+    resp.beginResponse(&server, g_content, sizeof(g_content));
+    resp.beginObject();
+    settings.Patronus.toJSON(resp);
+    resp.endObject();
+    resp.endResponse();
     });
   server.on("/roomSortOrder", []() {
     if(server.method() == HTTP_OPTIONS) { server.send(200, "OK"); return; }

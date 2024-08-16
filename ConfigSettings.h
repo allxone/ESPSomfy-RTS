@@ -24,6 +24,7 @@ struct restore_options_t {
   bool transceiver = false;
   bool repeaters = false;
   bool mqtt = false;
+  bool patronus = false;
   void fromJSON(JsonObject &obj);
 };
 struct appver_t {
@@ -166,6 +167,17 @@ class MQTTSettings: BaseSettings {
     void toJSON(JsonResponse &json);
     bool fromJSON(JsonObject &obj);
 };
+class PatronusSettings: BaseSettings {
+  public:
+    bool enabled = false;
+    uint16_t maxiaq = 150;
+    bool begin();
+    bool save();
+    bool load();
+    bool toJSON(JsonObject &obj);
+    void toJSON(JsonResponse &json);
+    bool fromJSON(JsonObject &obj);
+};
 class ConfigSettings: BaseSettings {
   public:
     static void printAvailHeap();
@@ -183,6 +195,7 @@ class ConfigSettings: BaseSettings {
     EthernetSettings Ethernet;
     NTPSettings NTP;
     MQTTSettings MQTT;
+    PatronusSettings Patronus;
     SecuritySettings Security;
     bool requiresAuth();
     bool fromJSON(JsonObject &obj);

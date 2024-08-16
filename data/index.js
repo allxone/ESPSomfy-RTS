@@ -566,6 +566,7 @@ async function initSockets() {
                     await wifi.loadNetwork();
                     await somfy.loadSomfy();
                     await mqtt.loadMQTT();
+                    await patronus.loadPatronus();
                     if (ui.isConfigOpen()) socket.send('join:0');
 
                     //await general.init();
@@ -636,6 +637,7 @@ async function init() {
     wifi.init();
     somfy.init();
     mqtt.init();
+    patronus.init();
     firmware.init();
 }
 class UIBinder {
@@ -4270,6 +4272,38 @@ class MQTT {
     }
 }
 var mqtt = new MQTT();
+
+class Patronus {
+    initialized = false;
+    init() { this.initialized = true; }
+    async loadPatronus() {
+        getJSONSync('/patronussettings', (err, settings) => {
+            if (err) 
+                console.log(err);
+            else {
+                console.log(settings);
+                ui.toElement(document.getElementById('divPatronus'), { patronus: settings });
+            }
+        });
+    }
+    connectPatronus() {
+        let obj = ui.fromElement(document.getElementById('divPatronus'));
+        console.log(obj);
+        if (obj.patronus.enabled) {
+            if (isNaN(obj.patronus.maxiaq) || obj.patronus.maxiaq < 0) {
+                ui.errorMessage('Invalid max IAQ number').querySelector('.sub-message').innerHTML = '150 is a good guess';
+                return;
+            }
+        }
+        putJSONSync('/connectpatronus', obj.patronus, (err, response) => {
+            if (err) ui.serviceError(err);
+            console.log(response);
+        });
+    }
+}
+var patronus = new Patronus();
+
+
 class Firmware {
     initialized = false;
     init() { this.initialized = true; }
@@ -4350,6 +4384,7 @@ class Firmware {
         html += `<div class="field-group" style="vertical-align:middle;width:auto;"><input id="cbRestoreSystem" type="checkbox" data-bind="settings" style="display:inline-block;" /><label for="cbRestoreSystem" style="display:inline-block;cursor:pointer;color:white;">Restore System Settings</label></div>`;
         html += `<div class="field-group" style="vertical-align:middle;width:auto;"><input id="cbRestoreNetwork" type="checkbox" data-bind="network" style="display:inline-block;" /><label for="cbRestoreNetwork" style="display:inline-block;cursor:pointer;color:white;">Restore Network Settings</label></div>`
         html += `<div class="field-group" style="vertical-align:middle;width:auto;"><input id="cbRestoreMQTT" type="checkbox" data-bind="mqtt" style="display:inline-block;" /><label for="cbRestoreMQTT" style="display:inline-block;cursor:pointer;color:white;">Restore MQTT Settings</label></div>`
+        html += `<div class="field-group" style="vertical-align:middle;width:auto;"><input id="cbRestorePatronus" type="checkbox" data-bind="patronus" style="display:inline-block;" /><label for="cbRestorePatronus" style="display:inline-block;cursor:pointer;color:white;">Restore Patronus Settings</label></div>`
         html += `<div class="field-group" style="vertical-align:middle;width:auto;"><input id="cbRestoreTransceiver" type="checkbox" data-bind="transceiver" style="display:inline-block;" /><label for="cbRestoreTransceiver" style="display:inline-block;cursor:pointer;color:white;">Restore Radio Settings</label></div>`;
         html += '</div>';
         inst.innerHTML = html;
@@ -4742,7 +4777,7 @@ class Firmware {
                     ui.errorMessage(el, 'This file is not a valid backup file');
                     return;
                 }
-                if (!data.shades && !data.settings && !data.network && !data.transceiver && !data.repeaters && !data.mqtt) {
+                if (!data.shades && !data.settings && !data.network && !data.transceiver && !data.repeaters && !data.mqtt && !data.patronus) {
                     ui.errorMessage(el, 'No restore options have been selected');
                     return;
                 }

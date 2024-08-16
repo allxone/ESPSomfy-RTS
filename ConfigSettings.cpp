@@ -13,6 +13,7 @@ void restore_options_t::fromJSON(JsonObject &obj) {
   if(obj.containsKey("shades")) this->shades = obj["shades"];
   if(obj.containsKey("settings")) this->settings = obj["settings"];
   if(obj.containsKey("network")) this->network = obj["network"];
+  if(obj.containsKey("patronus")) this->patronus = obj["patronus"];
   if(obj.containsKey("transceiver")) this->transceiver = obj["transceiver"];
   if(obj.containsKey("repeaters")) this->repeaters = obj["repeaters"];
   if(obj.containsKey("mqtt")) this->mqtt = obj["mqtt"];
@@ -195,6 +196,7 @@ bool ConfigSettings::begin() {
   this->Ethernet.begin();
   this->NTP.begin();
   this->MQTT.begin();
+  this->Patronus.begin();
   this->print();
   return true;
 }
@@ -381,6 +383,8 @@ bool ConfigSettings::toJSON(DynamicJsonDocument &doc) {
   this->NTP.toJSON(objNTP);
   JsonObject objMQTT = doc.createNestedObject("MQTT");
   this->MQTT.toJSON(objMQTT);
+  JsonObject objPatronus = doc.createNestedObject("Patronus");
+  this->Patronus.toJSON(objPatronus);
   return true;
 }
 bool NTPSettings::begin() {
@@ -744,6 +748,40 @@ bool EthernetSettings::load() {
 void EthernetSettings::print() {
   Serial.println("Ethernet Settings");
   Serial.printf("Board:%d PHYType:%d CLK:%d ADDR:%d PWR:%d MDC:%d MDIO:%d\n", this->boardType, this->phyType, this->CLKMode, this->phyAddress, this->PWRPin, this->MDCPin, this->MDIOPin);
+}
+bool PatronusSettings::begin() {
+  this->load();
+  return true;
+}
+void PatronusSettings::toJSON(JsonResponse &json) {
+  json.addElem("enabled", this->enabled);
+  json.addElem("maxiaq", (uint32_t)this->maxiaq);
+}
+
+bool PatronusSettings::toJSON(JsonObject &obj) {
+  obj["enabled"] = this->enabled;
+  obj["maxiaq"] = this->maxiaq;
+  return true;
+}
+bool PatronusSettings::fromJSON(JsonObject &obj) {
+  if(obj.containsKey("enabled")) this->enabled = obj["enabled"];
+  if(obj.containsKey("maxiaq")) this->maxiaq = obj["maxiaq"];
+  return true;
+}
+bool PatronusSettings::save() {
+  pref.begin("Patronus");
+  pref.clear();
+  pref.putBool("enabled", this->enabled);
+  pref.putShort("maxiaq", this->maxiaq);
+  pref.end();
+  return true;
+}
+bool PatronusSettings::load() {
+  pref.begin("Patronus");
+  this->enabled = pref.getBool("enabled", false);
+  this->maxiaq = pref.getShort("maxiaq", 150);
+  pref.end();
+  return true;
 }
 void ConfigSettings::printAvailHeap() {
   Serial.print("Max Heap: ");

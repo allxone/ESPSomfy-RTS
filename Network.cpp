@@ -9,11 +9,13 @@
 #include "Utils.h"
 #include "SSDP.h"
 #include "MQTT.h"
+#include "Patronus.h"
 
 extern ConfigSettings settings;
 extern Web webServer;
 extern SocketEmitter sockEmit;
 extern MQTTClass mqtt;
+extern PatronusClass patronus;
 extern rebootDelay_t rebootDelay;
 extern Network net;
 extern SomfyShadeController somfy;
@@ -26,6 +28,7 @@ static uint32_t _lastHeap = 0;
 int connectRetries = 0;
 void Network::end() {
   SSDP.end();
+  patronus.end();
   mqtt.end();
   sockEmit.end();
   delay(100);
@@ -148,6 +151,7 @@ void Network::loop() {
   
   sockEmit.loop();
   mqtt.loop();
+  patronus.loop();
   if(settings.ssdpBroadcast && this->connected()) {
     if(!SSDP.isStarted) SSDP.begin();
     if(SSDP.isStarted) SSDP.loop();
@@ -157,6 +161,7 @@ void Network::loop() {
 bool Network::changeAP(const uint8_t *bssid, const int32_t channel) {
   esp_task_wdt_reset(); // Make sure we do not reboot here.
   if(SSDP.isStarted) SSDP.end();
+  patronus.disconnect();
   mqtt.disconnect();
   //sockEmit.end();
   WiFi.disconnect(false, true);
