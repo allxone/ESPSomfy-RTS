@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <LittleFS.h>
 #include <esp_task_wdt.h>
+#include <bsec2.h>
 #include "ConfigSettings.h"
 #include "Network.h"
 #include "Web.h"
