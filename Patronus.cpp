@@ -1,10 +1,6 @@
-#include <ArduinoJson.h>
 #include <esp_task_wdt.h>
-#include <bme68xLibrary.h>
-#include <bsec2.h>
 #include "ConfigSettings.h"
 #include "Patronus.h"
-#include "Utils.h"
 
 extern ConfigSettings settings;
 extern rebootDelay_t rebootDelay;
@@ -84,13 +80,13 @@ bool PatronusClass::connect() {
   callbackInstance = this;
   envSensor.attachCallback(staticNewDataCallback);
 
-  Serial.println("BSEC library version " +
-                 String(envSensor.version.major) + "." + String(envSensor.version.minor) + "." + String(envSensor.version.major_bugfix) + "." + String(envSensor.version.minor_bugfix));
+  //Serial.println("BSEC library version " +
+  //               String(envSensor.version.major) + "." + String(envSensor.version.minor) + "." + String(envSensor.version.major_bugfix) + "." + String(envSensor.version.minor_bugfix));
   this->initialized = true;
   return true;
 }
 bool PatronusClass::disconnect() {
-  Serial.println("BSEC library callback detached!");
+  //Serial.println("BSEC library callback detached!");
   this->initialized = false;
   return true;
 }
@@ -105,14 +101,14 @@ void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs 
   {
     return;
   }
-  Serial.println("BSEC outputs:\n\ttimestamp = " + String((int)(outputs.output[0].time_stamp / INT64_C(1000000))));
+  //Serial.println("BSEC outputs:\n\ttimestamp = " + String((int)(outputs.output[0].time_stamp / INT64_C(1000000))));
 
   // Verify readingsDelay
   if (millis() - this->readingsTime >= this->readingsDelay)
     this->readingsTime += this->readingsDelay;
   else
   {
-    Serial.println("Reading skipped due to delay filtering");
+    //Serial.println("Reading skipped due to delay filtering");
     return;
   }
 
@@ -156,12 +152,14 @@ void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs 
       sensor = "humidity";
       break;
     default:
-      Serial.println("Warning!!! Unknown value");
+      //Serial.println("Warning!!! Unknown value");
       sensor = "unknown";
       break;
     }
-    Serial.print(sensor + ": " + String(output.signal));
-    Serial.println(" (accuracy: " + String((int)output.accuracy) + ")");
+    Serial.print(sensor);
+    Serial.print(": ");
+    Serial.println(String(output.signal));
+    //Serial.println(" (accuracy: " + String((int)output.accuracy) + ")");
     //TODO: mqtt_publish(sensor, output.signal);
   }
 }
@@ -170,19 +168,23 @@ void PatronusClass::bmeCheckBsecStatus(Bsec2 bsec)
 {
   if (bsec.status < BSEC_OK)
   {
-    Serial.println("BSEC error code : " + String(bsec.status));
+    Serial.print(F("BSEC err: "));
+    Serial.println(String(bsec.status));
   }
   else if (bsec.status > BSEC_OK)
   {
-    Serial.println("BSEC warning code : " + String(bsec.status));
+    Serial.print(F("BSEC warn: "));
+    Serial.println(String(bsec.status));
   }
 
   if (bsec.sensor.status < BME68X_OK)
   {
-    Serial.println("BME68X error code : " + String(bsec.sensor.status));
+    Serial.print(F("BME68X err: "));
+    Serial.println(String(bsec.sensor.status));
   }
   else if (bsec.sensor.status > BME68X_OK)
   {
-    Serial.println("BME68X warning code : " + String(bsec.sensor.status));
+    Serial.print(F("BME68X warn: "));
+    Serial.println(String(bsec.sensor.status));
   }
 }
