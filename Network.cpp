@@ -7,7 +7,6 @@
 #include "Web.h"
 #include "Sockets.h"
 #include "Utils.h"
-#include "SSDP.h"
 #include "MQTT.h"
 #include "Patronus.h"
 
@@ -27,7 +26,6 @@ static uint32_t _lastMaxHeap = 0;
 static uint32_t _lastHeap = 0;
 int connectRetries = 0;
 void Network::end() {
-  SSDP.end();
   patronus.end();
   mqtt.end();
   sockEmit.end();
@@ -152,15 +150,9 @@ void Network::loop() {
   sockEmit.loop();
   mqtt.loop();
   patronus.loop();
-  if(settings.ssdpBroadcast && this->connected()) {
-    if(!SSDP.isStarted) SSDP.begin();
-    if(SSDP.isStarted) SSDP.loop();
-  }
-  else if(!settings.ssdpBroadcast && SSDP.isStarted) SSDP.end();
 }
 bool Network::changeAP(const uint8_t *bssid, const int32_t channel) {
   esp_task_wdt_reset(); // Make sure we do not reboot here.
-  if(SSDP.isStarted) SSDP.end();
   patronus.disconnect();
   mqtt.disconnect();
   //sockEmit.end();
@@ -328,26 +320,6 @@ void Network::setConnected(conn_types_t connType) {
     Serial.print(this->connectAttempts - 1);
     Serial.println(" times");
   }
-  SSDP.setHTTPPort(80);
-  SSDP.setSchemaURL(0, "upnp.xml");
-  SSDP.setChipId(0, this->getChipId());
-  SSDP.setDeviceType(0, "urn:schemas-rstrouse-org:device:ESPSomfyRTS:1");
-  SSDP.setName(0, settings.hostname);
-  
-  //SSDP.setSerialNumber(0, "C2496952-5610-47E6-A968-2FC19737A0DB");
-  //SSDP.setUUID(0, settings.uuid);
-  SSDP.setModelName(0, "ESPSomfy RTS");
-  if(strlen(settings.chipModel) == 0) SSDP.setModelNumber(0, "ESP32");
-  else {
-    char sModel[20] = "";
-    snprintf(sModel, sizeof(sModel), "ESP32-%s", settings.chipModel);
-    SSDP.setModelNumber(0, sModel);
-  }
-  SSDP.setModelURL(0, "https://github.com/rstrouse/ESPSomfy-RTS");
-  SSDP.setManufacturer(0, "rstrouse");
-  SSDP.setManufacturerURL(0, "https://github.com/rstrouse");
-  SSDP.setURL(0, "/");
-  SSDP.setActive(0, true);
   esp_task_wdt_reset();
   if(MDNS.begin(settings.hostname)) {
     Serial.printf("MDNS Responder Started: serverId=%s\n", settings.serverId);
@@ -360,11 +332,6 @@ void Network::setConnected(conn_types_t connType) {
     MDNS.addServiceTxt("espsomfy_rts", "tcp", "model", "ESPSomfyRTS");
     MDNS.addServiceTxt("espsomfy_rts", "tcp", "version", String(settings.fwVersion.name));
   }
-  if(settings.ssdpBroadcast) {
-    esp_task_wdt_reset();
-    SSDP.begin();
-  }
-  else if(SSDP.isStarted) SSDP.end();
   esp_task_wdt_reset();
   this->emitSockets();
   settings.printAvailHeap();
@@ -435,13 +402,11 @@ void Network::updateHostname() {
       Serial.printf("Updating host name to %s...\n", settings.hostname);
       ETH.setHostname(settings.hostname);
       MDNS.setInstanceName(settings.hostname);        
-      SSDP.setName(0, settings.hostname);
      }
      else if(strcmp(settings.hostname, WiFi.getHostname()) != 0) {
       Serial.printf("Updating host name to %s...\n", settings.hostname);
       WiFi.setHostname(settings.hostname);
       MDNS.setInstanceName(settings.hostname);        
-      SSDP.setName(0, settings.hostname);
      }
   }
 }

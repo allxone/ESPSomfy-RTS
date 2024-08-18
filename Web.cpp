@@ -7,7 +7,6 @@
 #include "ConfigSettings.h"
 #include "ConfigFile.h"
 #include "Utils.h"
-#include "SSDP.h"
 #include "Somfy.h"
 #include "WResp.h"
 #include "Web.h"
@@ -17,7 +16,6 @@
 #include "Network.h"
 
 extern ConfigSettings settings;
-extern SSDPClass SSDP;
 extern rebootDelay_t rebootDelay;
 extern SomfyShadeController somfy;
 extern Web webServer;
@@ -1092,7 +1090,6 @@ void Web::begin() {
   server.on("/groupCommand", []() { webServer.handleGroupCommand(server); });
   server.on("/setPositions", []() { webServer.handleSetPositions(server); });
   server.on("/setSensor", []() { webServer.handleSetSensor(server); });
-  server.on("/upnp.xml", []() { SSDP.schema(server.client()); });
   server.on("/", []() { webServer.handleStreamFile(server, "/index.html", _encoding_html); });
   server.on("/login", []() { webServer.handleLogin(server); });
   server.on("/loginContext", []() { webServer.handleLoginContext(server); });
