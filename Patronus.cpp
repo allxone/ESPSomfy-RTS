@@ -1,6 +1,7 @@
 #include <esp_task_wdt.h>
 #include "ConfigSettings.h"
 #include "Patronus.h"
+#include "Utils.h"
 
 extern ConfigSettings settings;
 extern rebootDelay_t rebootDelay;
