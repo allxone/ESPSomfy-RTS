@@ -1,5 +1,7 @@
 #ifndef Patronus_H
 #define Patronus_H
+#include <bme68xLibrary.h>
+#include <bsec2.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
 class PatronusClass {

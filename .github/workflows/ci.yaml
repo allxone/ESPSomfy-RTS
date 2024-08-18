@@ -14,6 +14,8 @@ env:
   PYTHON_VERSION: "3.10"
   SMARTRC_CC1101_VERSION: "2.5.7"
   WEB_SOCKET_VERSION: "2.4.0"
+  BME68x_VERSION: "1.2.40408"
+  BSEC2_VERSION: "1.7.2502"
 
 jobs:
   littlefs:
@@ -22,17 +24,17 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Checkout mklittlefs
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: earlephilhower/mklittlefs
           path: mklittlefs
           ref: ${{ env.MKLITTLEFS_VERSION }}
 
       - name: Checkout LittleFS
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: littlefs-project/littlefs
           path: mklittlefs/littlefs
@@ -47,7 +49,7 @@ jobs:
           ./mklittlefs/mklittlefs --create data --size 1441792 SomfyController.littlefs.bin
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: LittleFS
           path: SomfyController.littlefs.bin
@@ -70,7 +72,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: SomfyController
 
@@ -109,6 +111,8 @@ jobs:
           arduino-cli lib install PubSubClient@${{ env.PUB_SUB_CLIENT_VERSION }}
           arduino-cli lib install SmartRC-CC1101-Driver-Lib@${{ env.SMARTRC_CC1101_VERSION }}
           arduino-cli lib install WebSockets@${{ env.WEB_SOCKET_VERSION }}
+          arduino-cli lib install "BME68x Sensor library@${{ env.BME68x_VERSION }}"
+          arduino-cli lib install bsec2@${{ env.BSEC2_VERSION }}
 
       - name: Build ${{ matrix.name }}
         run: |
@@ -125,7 +129,7 @@ jobs:
             0x290000 SomfyController.littlefs.bin
 
       - name: Upload ${{ matrix.name }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
           path: |
