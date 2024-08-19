@@ -757,7 +757,6 @@ void PatronusSettings::toJSON(JsonResponse &json) {
   json.addElem("enabled", this->enabled);
   json.addElem("maxiaq", (uint32_t)this->maxiaq);
 }
-
 bool PatronusSettings::toJSON(JsonObject &obj) {
   obj["enabled"] = this->enabled;
   obj["maxiaq"] = this->maxiaq;
