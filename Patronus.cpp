@@ -1,11 +1,13 @@
 #include <esp_task_wdt.h>
 #include "ConfigSettings.h"
-#include "Patronus.h"
+#include "MQTT.h"
 #include "Utils.h"
 #include "Sockets.h"
+#include "Patronus.h"
 
 extern ConfigSettings settings;
 extern rebootDelay_t rebootDelay;
+extern MQTTClass mqtt;
 
 Bsec2 envSensor;
 Adafruit_VEML7700 veml = Adafruit_VEML7700();
@@ -213,4 +215,5 @@ bool PatronusClass::bmeCheckBsecStatus(Bsec2 bsec)
     Serial.println(String(bsec.sensor.status));
     return true;
   }
+  return false;
 }

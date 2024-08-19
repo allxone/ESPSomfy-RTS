@@ -24,21 +24,9 @@ class PatronusClass {
     bool connected();
     void reset();
     void publish();
-    /**
-     * @brief : This function checks the BSEC status, prints the respective error code. Halts in case of error
-     * @param[in] bsec  : Bsec2 class object
-     */
-    void bmeCheckBsecStatus(Bsec2 bsec);
-
-    /**
-     * @brief : This function is called by the BSEC library when a new output is available
-     * @param[in] input     : BME68X sensor data before processing
-     * @param[in] outputs   : Processed BSEC BSEC output data
-     * @param[in] bsec      : Instance of BSEC2 calling the callback
-     */
-    bool bmeNewDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
+    bool bmeCheckBsecStatus(Bsec2 bsec);
+    void bmeNewDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
     void emitData(const char *evt = "patronusData");
     void emitData(uint8_t num, const char *evt = "patronusData");
-
 };
 #endif
