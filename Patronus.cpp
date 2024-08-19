@@ -8,6 +8,7 @@
 extern ConfigSettings settings;
 extern rebootDelay_t rebootDelay;
 extern MQTTClass mqtt;
+extern SocketEmitter sockEmit;
 
 Bsec2 envSensor;
 Adafruit_VEML7700 veml = Adafruit_VEML7700();
@@ -56,7 +57,7 @@ bool PatronusClass::loop() {
 void PatronusClass::publish() {
   if(mqtt.connected()) {
     //TODO: publish bsec2 data
-    mqtt.publish("patronus/data/lux", this->lastLux, true);
+    mqtt.publish("patronus/data/lux", String(this->lastLux), true);
   }
 }
 bool PatronusClass::connect() {
