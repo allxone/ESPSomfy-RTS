@@ -36,6 +36,8 @@ class PatronusClass {
      * @param[in] bsec      : Instance of BSEC2 calling the callback
      */
     void bmeNewDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
+    void emitData(const char *evt = "patronusData");
+    void emitData(uint8_t num, const char *evt = "patronusData");
 
 };
 #endif

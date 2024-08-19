@@ -509,6 +509,9 @@ async function initSockets() {
                         case 'shadeState':
                             somfy.procShadeState(msg);
                             break;
+                        case 'patronusData':
+                            patronus.setPatronusData(msg);
+                            break;
                         case 'shadeCommand':
                             console.log(msg);
                             break;
@@ -4299,6 +4302,24 @@ class Patronus {
             if (err) ui.serviceError(err);
             console.log(response);
         });
+    }
+    setPatronusData(data) {
+        console.log(data);
+        let divCfg = '<div>';
+        divCfg += `<span>Lux: ${data.lux}</span><br />`;
+        divCfg += `<span>Stabilization: ${data.stabilization_status}</span><br />`;
+        divCfg += `<span>Status: ${data.run_in_status}</span><br />`;
+        divCfg += `<span>iaq: ${data.iaq}</span><br />`;
+        divCfg += `<span>vocp: ${data.vocp}</span><br />`;
+        divCfg += `<span>co2: ${data.co2}</span><br />`;
+        divCfg += `<span>temperature_raw: ${data.temperature_raw}</span><br />`;
+        divCfg += `<span>pressure_raw: ${data.pressure_raw}</span><br />`;
+        divCfg += `<span>humidity_raw: ${data.humidity_raw}</span><br />`;
+        divCfg += `<span>gas_raw: ${data.gas_raw}</span><br />`;
+        divCfg += `<span>temperature: ${data.temperature}</span><br />`;
+        divCfg += `<span>humidity: ${data.humidity}</span><br />`;
+        divCfg += `</div>`;
+        document.getElementById('divPatronusData').innerHTML = divCfg;
     }
 }
 var patronus = new Patronus();

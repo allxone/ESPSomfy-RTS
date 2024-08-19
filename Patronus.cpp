@@ -77,13 +77,13 @@ bool PatronusClass::connect() {
   this->bsec2Connected = envSensor.begin(BME68X_I2C_ADDR_LOW, Wire);
   if (!this->bsec2Connected)
   {
-    this->bmeCheckBsecStatus(envSensor);
+    return this->bmeCheckBsecStatus(envSensor);
   }
 
   /* Subsribe to the desired BSEC2 outputs */
   if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP))
   {
-    this->bmeCheckBsecStatus(envSensor);
+    return this->bmeCheckBsecStatus(envSensor);
   }
 
   /* Whenever new data is available call the newDataCallback function */
@@ -123,80 +123,94 @@ void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs 
   }
 
   this->lastOutputs = outputs;
-
-  // String sensor;
-  // for (uint8_t i = 0; i < outputs.nOutputs; i++)
-  // {
-  //   const bsecData output = outputs.output[i];
-  //   switch (output.sensor_id)
-  //   {
-  //   case BSEC_OUTPUT_STABILIZATION_STATUS:
-  //     sensor = "stabilization_status";
-  //     break;
-  //   case BSEC_OUTPUT_RUN_IN_STATUS:
-  //     sensor = "run_in_status";
-  //     break;
-  //   case BSEC_OUTPUT_STATIC_IAQ:
-  //     sensor = "iaq";
-  //     break;
-  //   case BSEC_OUTPUT_BREATH_VOC_EQUIVALENT:
-  //     sensor = "vocp";
-  //     break;
-  //   case BSEC_OUTPUT_CO2_EQUIVALENT:
-  //     sensor = "co2";
-  //     break;
-  //   case BSEC_OUTPUT_RAW_TEMPERATURE:
-  //     sensor = "temperature_raw";
-  //     break;
-  //   case BSEC_OUTPUT_RAW_PRESSURE:
-  //     sensor = "pressure_raw";
-  //     break;
-  //   case BSEC_OUTPUT_RAW_HUMIDITY:
-  //     sensor = "humidity_raw";
-  //     break;
-  //   case BSEC_OUTPUT_RAW_GAS:
-  //     sensor = "gas_raw";
-  //     break;
-  //   case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
-  //     sensor = "temperature";
-  //     break;
-  //   case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY:
-  //     sensor = "humidity";
-  //     break;
-  //   default:
-  //     //Serial.println("Warning!!! Unknown value");
-  //     sensor = "unknown";
-  //     break;
-  //   }
-  //   Serial.print(sensor);
-  //   Serial.print(": ");
-  //   Serial.println(String(output.signal));
-    //Serial.println(" (accuracy: " + String((int)output.accuracy) + ")");
-    //TODO: mqtt_publish(sensor, output.signal);
-  // }
 }
 
-void PatronusClass::bmeCheckBsecStatus(Bsec2 bsec)
+void PatronusClass::publish() {
+  if(mqtt.connected()) {
+    //TODO: publish bsec2 data
+    mqtt.publish("patronus/data/lux", this->lastLux, true);
+  }
+}
+
+void PatronusClass::emitData(const char *evt) { this->emitData(255, evt); }
+void PatronusClass::emitData(uint8_t num, const char *evt) {
+  JsonSockEvent *json = sockEmit.beginEmit(evt);
+  json->beginObject();
+  json->addElem("lux", this->lastLux);
+  for (uint8_t i = 0; i < this->lastOutputs.nOutputs; i++)
+  {
+    const bsecData output = outputs.output[i];
+    switch (output.sensor_id)
+    {
+    case BSEC_OUTPUT_STABILIZATION_STATUS:
+      json->addElem("stabilization_status", String(output.signal));
+      break;
+    case BSEC_OUTPUT_RUN_IN_STATUS:
+      json->addElem("run_in_status", String(output.signal));
+      break;
+    case BSEC_OUTPUT_STATIC_IAQ:
+      json->addElem("iaq", String(output.signal));
+      break;
+    case BSEC_OUTPUT_BREATH_VOC_EQUIVALENT:
+      json->addElem("vocp", String(output.signal));
+      break;
+    case BSEC_OUTPUT_CO2_EQUIVALENT:
+      json->addElem("co2", String(output.signal));
+      break;
+    case BSEC_OUTPUT_RAW_TEMPERATURE:
+      json->addElem("temperature_raw", String(output.signal));
+      break;
+    case BSEC_OUTPUT_RAW_PRESSURE:
+      json->addElem("pressure_raw", String(output.signal));
+      break;
+    case BSEC_OUTPUT_RAW_HUMIDITY:
+      json->addElem("humidity_raw", String(output.signal));
+      break;
+    case BSEC_OUTPUT_RAW_GAS:
+      json->addElem("gas_raw", String(output.signal));
+      break;
+    case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
+      json->addElem("temperature", String(output.signal));
+      break;
+    case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY:
+      json->addElem("humidity", String(output.signal));
+      break;
+    default:
+      break;
+    }
+  }
+  json->endObject();
+  sockEmit.endEmit(num);
+
+  // Publish to MQTT
+  this->publish();
+}
+
+bool PatronusClass::bmeCheckBsecStatus(Bsec2 bsec)
 {
   if (bsec.status < BSEC_OK)
   {
     Serial.print(F("BSEC err: "));
     Serial.println(String(bsec.status));
+    return false;
   }
   else if (bsec.status > BSEC_OK)
   {
     Serial.print(F("BSEC warn: "));
     Serial.println(String(bsec.status));
+    return true;
   }
 
   if (bsec.sensor.status < BME68X_OK)
   {
     Serial.print(F("BME68X err: "));
     Serial.println(String(bsec.sensor.status));
+    return false;
   }
   else if (bsec.sensor.status > BME68X_OK)
   {
     Serial.print(F("BME68X warn: "));
     Serial.println(String(bsec.sensor.status));
+    return true;
   }
 }
