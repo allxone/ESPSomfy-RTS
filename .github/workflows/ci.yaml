@@ -16,6 +16,7 @@ env:
   WEB_SOCKET_VERSION: "2.4.0"
   BME68x_VERSION: "1.2.40408"
   BSEC2_VERSION: "1.7.2502"
+  VEML7700_VERSION: "2.1.6"
 
 jobs:
   littlefs:
@@ -113,6 +114,7 @@ jobs:
           arduino-cli lib install WebSockets@${{ env.WEB_SOCKET_VERSION }}
           arduino-cli lib install "BME68x Sensor library@${{ env.BME68x_VERSION }}"
           arduino-cli lib install bsec2@${{ env.BSEC2_VERSION }}
+          arduino-cli lib install "Adafruit VEML7700 Library@${{ env.VEML7700_VERSION }}"
 
       - name: Build ${{ matrix.name }}
         run: |

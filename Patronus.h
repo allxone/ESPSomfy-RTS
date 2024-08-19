@@ -2,14 +2,19 @@
 #define Patronus_H
 #include <bme68xLibrary.h>
 #include <bsec2.h>
+#include <"Adafruit_VEML7700.h>"
 #include <Arduino.h>
 #include <ArduinoJson.h>
+
 class PatronusClass {
   public:
     uint64_t lastConnect = 0;
     bool suspended = false;
-    bool initialized = false;
-    unsigned long readingsDelay = 15 * 1000L;
+    bool vemlConnected = false;
+    bool bsec2Connected = false;
+    float lastLux;
+    bsecOutputs lastOutputs;
+    unsigned long readingsDelay = 15 * 1000L; // 15m
     unsigned long readingsTime = millis() - readingsDelay;
     bool begin();
     bool loop();
