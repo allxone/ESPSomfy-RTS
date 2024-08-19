@@ -2,6 +2,7 @@
 #include "ConfigSettings.h"
 #include "Patronus.h"
 #include "Utils.h"
+#include "Sockets.h"
 
 extern ConfigSettings settings;
 extern rebootDelay_t rebootDelay;
@@ -49,6 +50,12 @@ bool PatronusClass::loop() {
     }
   }
   return true;
+}
+void PatronusClass::publish() {
+  if(mqtt.connected()) {
+    //TODO: publish bsec2 data
+    mqtt.publish("patronus/data/lux", this->lastLux, true);
+  }
 }
 bool PatronusClass::connect() {
   esp_task_wdt_reset(); // Make sure we do not reboot here.
@@ -125,13 +132,6 @@ void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs 
   this->lastOutputs = outputs;
 }
 
-void PatronusClass::publish() {
-  if(mqtt.connected()) {
-    //TODO: publish bsec2 data
-    mqtt.publish("patronus/data/lux", this->lastLux, true);
-  }
-}
-
 void PatronusClass::emitData(const char *evt) { this->emitData(255, evt); }
 void PatronusClass::emitData(uint8_t num, const char *evt) {
   JsonSockEvent *json = sockEmit.beginEmit(evt);
@@ -139,7 +139,7 @@ void PatronusClass::emitData(uint8_t num, const char *evt) {
   json->addElem("lux", this->lastLux);
   for (uint8_t i = 0; i < this->lastOutputs.nOutputs; i++)
   {
-    const bsecData output = outputs.output[i];
+    const bsecData output = this->lastOutputs.output[i];
     switch (output.sensor_id)
     {
     case BSEC_OUTPUT_STABILIZATION_STATUS:
