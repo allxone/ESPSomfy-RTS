@@ -40,7 +40,7 @@ bool PatronusClass::loop() {
   }
   if(settings.Patronus.enabled) {
     // Query VEML7700
-    this->lastLux = veml.readlux(VEML_LUX_AUTO);
+    this->lastLux = veml.readLux(VEML_LUX_AUTO);
 
     // Query BME688
     if (!envSensor.run())
