@@ -147,7 +147,7 @@ void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs 
     this->readingsTime += this->readingsDelay;
   else
   {
-    //Serial.println("Reading skipped due to delay filtering");
+    Serial.println("Reading skipped due to delay filtering");
     return;
   }
   this->lastOutputs = outputs;  
