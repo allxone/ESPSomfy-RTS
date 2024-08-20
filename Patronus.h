@@ -2,7 +2,7 @@
 #define Patronus_H
 #include <bme68xLibrary.h>
 #include <bsec2.h>
-#include <Adafruit_VEML7700.h>
+//#include <Adafruit_VEML7700.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
 

@@ -245,10 +245,10 @@ void Web::handleController(WebServer &server) {
     resp.endObject();
     resp.beginObject("version");
     resp.beginObject("fwVersion");
-    settings.fwVersion.toJSON(json);
+    settings.fwVersion.toJSON(resp);
     resp.endObject();
     resp.beginObject("appVersion");
-    settings.appVersion.toJSON(json);
+    settings.appVersion.toJSON(resp);
     resp.endObject();
     resp.endObject();
     resp.beginArray("rooms");

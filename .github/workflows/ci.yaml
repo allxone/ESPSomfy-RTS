@@ -114,7 +114,6 @@ jobs:
           arduino-cli lib install WebSockets@${{ env.WEB_SOCKET_VERSION }}
           arduino-cli lib install "BME68x Sensor library@${{ env.BME68x_VERSION }}"
           arduino-cli lib install bsec2@${{ env.BSEC2_VERSION }}
-          arduino-cli lib install "Adafruit VEML7700 Library@${{ env.VEML7700_VERSION }}"
 
       - name: Build ${{ matrix.name }}
         run: |
