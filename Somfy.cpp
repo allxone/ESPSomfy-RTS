@@ -9,14 +9,12 @@
 #include "Sockets.h"
 #include "MQTT.h"
 #include "ConfigFile.h"
-#include "GitOTA.h"
 
 extern Preferences pref;
 extern SomfyShadeController somfy;
 extern SocketEmitter sockEmit;
 extern ConfigSettings settings;
 extern MQTTClass mqtt;
-extern GitUpdater git;
 
 
 uint8_t rxmode = 0;  // Indicates whether the radio is in receive mode.  Just to ensure there isn't more than one interrupt hooked.
@@ -621,7 +619,6 @@ bool SomfyShadeController::begin() {
   return true;
 }
 void SomfyShadeController::commit() {
-  if(git.lockFS) return;
   esp_task_wdt_reset(); // Make sure we don't reset inadvertently.
   ShadeConfigFile file;
   file.begin();
@@ -631,7 +628,6 @@ void SomfyShadeController::commit() {
   this->lastCommit = millis();
 }
 void SomfyShadeController::writeBackup() {
-  if(git.lockFS) return;
   esp_task_wdt_reset(); // Make sure we don't reset inadvertently.
   ShadeConfigFile file;
   file.begin("/controller.backup", false);

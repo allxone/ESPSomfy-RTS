@@ -10,7 +10,6 @@
 #include "Somfy.h"
 #include "MQTT.h"
 #include "Patronus.h"
-#include "GitOTA.h"
 
 ConfigSettings settings;
 Web webServer;
@@ -20,7 +19,6 @@ rebootDelay_t rebootDelay;
 SomfyShadeController somfy;
 MQTTClass mqtt;
 PatronusClass patronus;
-GitUpdater git;
 
 uint32_t oldheap = 0;
 void setup() {
@@ -39,7 +37,6 @@ void setup() {
   delay(1000);
   net.setup();  
   somfy.begin();
-  //git.checkForUpdate();
   esp_task_wdt_init(7, true); //enable panic so ESP32 restarts
   esp_task_wdt_add(NULL); //add current thread to WDT watch
 
@@ -68,7 +65,6 @@ void loop() {
   esp_task_wdt_reset();
   if(net.connected() || net.softAPOpened) {
     if(!rebootDelay.reboot && net.connected() && !net.softAPOpened) {
-      git.loop();
       esp_task_wdt_reset();
     }
     webServer.loop();

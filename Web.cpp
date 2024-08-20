@@ -12,7 +12,6 @@
 #include "Web.h"
 #include "MQTT.h"
 #include "Patronus.h"
-#include "GitOTA.h"
 #include "Network.h"
 
 extern ConfigSettings settings;
@@ -21,7 +20,6 @@ extern SomfyShadeController somfy;
 extern Web webServer;
 extern MQTTClass mqtt;
 extern PatronusClass patronus;
-extern GitUpdater git;
 extern Network net;
 
 //#define WEB_MAX_RESPONSE 34768
@@ -209,10 +207,6 @@ void Web::handleLogin(WebServer &server) {
     return;
 }
 void Web::handleStreamFile(WebServer &server, const char *filename, const char *encoding) {
-  if(git.lockFS) {
-    server.send(500, _encoding_json, F("{\"status\":\"ERROR\",\"desc\":\"Filesystem update in progress\"}"));
-    return;
-  }
   webServer.sendCORSHeaders(server);
   if(server.method() == HTTP_OPTIONS) { server.send(200, "OK"); return; }
   esp_task_wdt_reset();
@@ -250,7 +244,12 @@ void Web::handleController(WebServer &server) {
     somfy.transceiver.toJSON(resp);
     resp.endObject();
     resp.beginObject("version");
-    git.toJSON(resp);
+    resp.beginObject("fwVersion");
+    settings.fwVersion.toJSON(json);
+    resp.endObject();
+    resp.beginObject("appVersion");
+    settings.appVersion.toJSON(json);
+    resp.endObject();
     resp.endObject();
     resp.beginArray("rooms");
     somfy.toJSONRooms(resp);
@@ -799,7 +798,6 @@ void Web::handleDiscovery(WebServer &server) {
     resp.beginObject();
     resp.addElem("serverId", settings.serverId);
     resp.addElem("version", settings.fwVersion.name);
-    resp.addElem("latest", git.latest.name);
     resp.addElem("model", "ESPSomfyRTS");
     resp.addElem("hostname", settings.hostname);
     resp.addElem("authType", static_cast<uint8_t>(settings.Security.type));
@@ -973,47 +971,6 @@ void Web::handleSetSensor(WebServer &server) {
     server.send(500, _encoding_json, F("{\"status\":\"ERROR\",\"desc\":\"shadeId was not provided\"}"));
   }
 }
-void Web::handleDownloadFirmware(WebServer &server) {
-  webServer.sendCORSHeaders(server);
-  if(server.method() == HTTP_OPTIONS) { server.send(200, "OK"); return; }
-  GitRepo repo;
-  GitRelease *rel = nullptr;
-  int8_t err = repo.getReleases();
-  Serial.println("downloadFirmware called...");
-  if(err == 0) {
-    if(server.hasArg("ver")) {
-      if(strcmp(server.arg("ver").c_str(), "latest") == 0) rel = &repo.releases[0];
-      else if(strcmp(server.arg("ver").c_str(), "main") == 0) {
-        rel = &repo.releases[GIT_MAX_RELEASES];
-      }
-      else {
-        for(uint8_t i = 0; i < GIT_MAX_RELEASES; i++) {
-          if(repo.releases[i].id == 0) continue;
-          if(strcmp(repo.releases[i].name, server.arg("ver").c_str()) == 0) {
-            rel = &repo.releases[i];  
-          }
-        }
-      }
-      if(rel) {
-        JsonResponse resp;
-        resp.beginResponse(&server, g_content, sizeof(g_content));
-        resp.beginObject();
-        rel->toJSON(resp);
-        resp.endObject();
-        resp.endResponse();
-        strcpy(git.targetRelease, rel->name);
-        git.status = GIT_AWAITING_UPDATE;
-      }
-      else
-        server.send(500, _encoding_json, F("{\"status\":\"ERROR\",\"desc\":\"Release not found in repo.\"}"));
-    }
-    else
-      server.send(500, _encoding_json, F("{\"status\":\"ERROR\",\"desc\":\"Release version not supplied.\"}"));
-  }
-  else {
-      server.send(err, _encoding_json, F("{\"status\":\"ERROR\",\"desc\":\"Error communicating with Github.\"}"));
-  }
-}
 void Web::handleNotFound(WebServer &server) {
     HTTPMethod method = server.method();
     Serial.printf("Request %s 404-%d ", server.uri().c_str(), method);
@@ -1079,7 +1036,6 @@ void Web::begin() {
   apiServer.on("/group", HTTP_GET, [] () { webServer.handleGroup(apiServer); });
   apiServer.on("/setPositions", []() { webServer.handleSetPositions(apiServer); });
   apiServer.on("/setSensor", []() { webServer.handleSetSensor(apiServer); });
-  apiServer.on("/downloadFirmware", []() { webServer.handleDownloadFirmware(apiServer); });
   apiServer.on("/backup", []() { webServer.handleBackup(apiServer); });
   apiServer.on("/reboot", []() { webServer.handleReboot(apiServer); });
   
@@ -1095,38 +1051,6 @@ void Web::begin() {
   server.on("/loginContext", []() { webServer.handleLoginContext(server); });
   server.on("/shades.cfg", []() { webServer.handleStreamFile(server, "/shades.cfg", _encoding_text); });
   server.on("/shades.tmp", []() { webServer.handleStreamFile(server, "/shades.tmp", _encoding_text); });
-  server.on("/getReleases", []() {
-    webServer.sendCORSHeaders(server);
-    if(server.method() == HTTP_OPTIONS) { server.send(200, "OK"); return; }
-    GitRepo repo;
-    repo.getReleases();
-    git.setCurrentRelease(repo);
-    JsonResponse resp;
-    resp.beginResponse(&server, g_content, sizeof(g_content));
-    resp.beginObject();
-    repo.toJSON(resp);
-    resp.endObject();
-    resp.endResponse();
-  });
-  server.on("/downloadFirmware", []() { webServer.handleDownloadFirmware(server); });
-  server.on("/cancelFirmware", []() {
-    webServer.sendCORSHeaders(server);
-    if(server.method() == HTTP_OPTIONS) { server.send(200, "OK"); return; }
-    // If we are currently downloading the filesystem we cannot cancel.
-    if(!git.lockFS) {
-      git.status = GIT_UPDATE_CANCELLING;
-      JsonResponse resp;
-      resp.beginResponse(&server, g_content, sizeof(g_content));
-      resp.beginObject();
-      git.toJSON(resp);
-      resp.endObject();
-      resp.endResponse();
-      git.cancelled = true;
-    }
-    else {
-      server.send(500, _encoding_json, F("{\"status\":\"ERROR\",\"desc\":\"Cannot cancel during filesystem update.\"}"));
-    }
-  });
   server.on("/backup", []() { webServer.handleBackup(server, true); });
   server.on("/restore", HTTP_POST, []() {
     webServer.sendCORSHeaders(server);
@@ -2088,10 +2012,6 @@ void Web::begin() {
       esp_task_wdt_reset();
     });
   server.on("/updateShadeConfig", HTTP_POST, []() {
-    if(git.lockFS) {
-      server.send(500, _encoding_json, F("{\"status\":\"ERROR\",\"desc\":\"Filesystem update in progress\"}"));
-      return;
-    }
     webServer.sendCORSHeaders(server);
     if(server.method() == HTTP_OPTIONS) { server.send(200, "OK"); return; }
     server.sendHeader("Connection", "close");
@@ -2343,7 +2263,6 @@ void Web::begin() {
           bool checkForUpdate = settings.checkForUpdate;
           settings.fromJSON(obj);
           settings.save();
-          if(settings.checkForUpdate != checkForUpdate) git.emitUpdateCheck();
           if(obj.containsKey("hostname")) net.updateHostname();
         }
         if (obj.containsKey("ntpServer") || obj.containsKey("ntpServer")) {
@@ -2755,18 +2674,6 @@ void Web::begin() {
     serializeJson(doc, g_content);
     server.send(200, _encoding_json, g_content);
     */
-  });
-  server.on("/recoverFilesystem", [] () {
-    if(server.method() == HTTP_OPTIONS) { server.send(200, "OK"); return; }
-    webServer.sendCORSHeaders(server);
-    if(git.status == GIT_UPDATING)
-      server.send(200, "application/json", "{\"status\":\"OK\",\"desc\":\"Filesystem is updating.  Please wait!!!\"}");
-    else if(git.status != GIT_STATUS_READY)
-      server.send(200, "application/json", "{\"status\":\"ERROR\",\"desc\":\"Cannot recover file system at this time.\"}");
-    else {
-      git.recoverFilesystem();
-      server.send(200, "application/json", "{\"status\":\"OK\",\"desc\":\"Recovering filesystem from github please wait!!!\"}");
-    }
   });
   server.begin();
   apiServer.begin();
