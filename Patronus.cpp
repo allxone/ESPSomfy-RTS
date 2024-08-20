@@ -74,9 +74,6 @@ bool PatronusClass::connect() {
   Wire.begin();
   Serial.println("Patronus connect wire began");
 
-  /* Initialize VEML7700 sensor */
-  this->vemlConnected = veml.begin();
-
   /* Desired subscription list of BSEC2 outputs */
   bsecSensor sensorList[] = {
       BSEC_OUTPUT_STABILIZATION_STATUS,
