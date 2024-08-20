@@ -4297,6 +4297,10 @@ class Patronus {
                 ui.errorMessage('Invalid max IAQ number').querySelector('.sub-message').innerHTML = '150 is a good guess';
                 return;
             }
+            if (isNaN(obj.patronus.warmup) || obj.patronus.warmup < 0 || obj.patronus.warmup > 15000) {
+                ui.errorMessage('Invalid warmup number [0-15000]').querySelector('.sub-message').innerHTML = '15000 is a good guess';
+                return;
+            }
         }
         putJSONSync('/connectpatronus', obj.patronus, (err, response) => {
             if (err) ui.serviceError(err);

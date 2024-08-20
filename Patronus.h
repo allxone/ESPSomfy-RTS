@@ -14,8 +14,7 @@ class PatronusClass {
     unsigned long lastEmit = 0;
     float lastLux;
     bsecOutputs lastOutputs;
-    unsigned long readingsDelay = 15 * 1000L; // 15m
-    unsigned long readingsTime = millis() - readingsDelay;
+    unsigned long readingsTime = millis();
     bool begin();
     bool loop();
     bool end();

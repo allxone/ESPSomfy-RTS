@@ -657,6 +657,7 @@ bool ShadeConfigFile::readNetRecord(restore_options_t &opts) {
       }
       if(opts.patronus) {
         settings.Patronus.maxiaq = this->readUInt16(150);
+        settings.Patronus.warmup = this->readUInt16(15000);
       }
       else {
         this->skipValue(6); // maxiaq

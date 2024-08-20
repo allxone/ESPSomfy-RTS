@@ -138,16 +138,14 @@ void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs 
 {
   if (!outputs.nOutputs)
   {
+    Serial.println("BME688 no output!");
     return;
   }
-  //Serial.println("BSEC outputs:\n\ttimestamp = " + String((int)(outputs.output[0].time_stamp / INT64_C(1000000))));
 
   // Verify readingsDelay
-  if (millis() - this->readingsTime >= this->readingsDelay)
-    this->readingsTime += this->readingsDelay;
-  else
+  if (millis() - this->readingsTime < settings.Patronus.warmup * 1000)
   {
-    Serial.println("Reading skipped due to delay filtering");
+    Serial.println("BME688 warmup!");
     return;
   }
   this->lastOutputs = outputs;  

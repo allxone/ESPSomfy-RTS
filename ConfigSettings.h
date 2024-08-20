@@ -171,6 +171,7 @@ class PatronusSettings: BaseSettings {
   public:
     bool enabled = false;
     uint16_t maxiaq = 150;
+    uint16_t warmup = 15000;
     bool begin();
     bool save();
     bool load();

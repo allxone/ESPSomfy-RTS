@@ -756,15 +756,18 @@ bool PatronusSettings::begin() {
 void PatronusSettings::toJSON(JsonResponse &json) {
   json.addElem("enabled", this->enabled);
   json.addElem("maxiaq", (uint32_t)this->maxiaq);
+  json.addElem("warmup", (uint32_t)this->warmup);
 }
 bool PatronusSettings::toJSON(JsonObject &obj) {
   obj["enabled"] = this->enabled;
   obj["maxiaq"] = this->maxiaq;
+  obj["warmup"] = this->warmup;
   return true;
 }
 bool PatronusSettings::fromJSON(JsonObject &obj) {
   if(obj.containsKey("enabled")) this->enabled = obj["enabled"];
   if(obj.containsKey("maxiaq")) this->maxiaq = obj["maxiaq"];
+  if(obj.containsKey("warmup")) this->warmup = obj["warmup"];
   return true;
 }
 bool PatronusSettings::save() {
@@ -772,6 +775,7 @@ bool PatronusSettings::save() {
   pref.clear();
   pref.putBool("enabled", this->enabled);
   pref.putShort("maxiaq", this->maxiaq);
+  pref.putShort("warmup", this->warmup);
   pref.end();
   return true;
 }
@@ -780,6 +784,7 @@ bool PatronusSettings::load() {
   pref.begin("Patronus");
   this->enabled = pref.getBool("enabled", false);
   this->maxiaq = pref.getShort("maxiaq", 150);
+  this->warmup = pref.getShort("warmup", 15000);
   pref.end();
   return true;
 }
