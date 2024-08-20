@@ -102,7 +102,7 @@ bool PatronusClass::connect() {
   //               String(envSensor.version.major) + "." + String(envSensor.version.minor) + "." + String(envSensor.version.major_bugfix) + "." + String(envSensor.version.minor_bugfix));
 
   /* Initialize VEML7700 sensor */
-  this->vemlConnected = veml.begin(Wire);
+  this->vemlConnected = veml.begin(&Wire);
 
   return true;
 }
