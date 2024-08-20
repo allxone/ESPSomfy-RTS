@@ -11,6 +11,7 @@ class PatronusClass {
     bool suspended = false;
     bool vemlConnected = false;
     bool bsec2Connected = false;
+    unsigned long lastEmit = 0;
     float lastLux;
     bsecOutputs lastOutputs;
     unsigned long readingsDelay = 15 * 1000L; // 15m
@@ -25,7 +26,7 @@ class PatronusClass {
     void publish();
     bool bmeCheckBsecStatus(Bsec2 bsec);
     void bmeNewDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
-    void emitData(const char *evt = "patronusData");
-    void emitData(uint8_t num, const char *evt = "patronusData");
+    void emitData();
+    void emitData(uint8_t num);
 };
 #endif

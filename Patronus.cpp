@@ -56,6 +56,16 @@ bool PatronusClass::loop() {
       return this->bmeCheckBsecStatus(envSensor);
     }
 
+    if(millis() - this->lastEmit > 15000) {
+      // Post our connection status if needed.
+      this->lastEmit = millis();
+      if(this->connected()) {
+        this->emitData();
+        this->lastEmit = millis();
+      }
+      esp_task_wdt_reset(); // Make sure we do not reboot here.
+    }
+
   }
   return true;
 }
@@ -143,9 +153,9 @@ void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs 
   this->lastOutputs = outputs;  
 }
 
-void PatronusClass::emitData(const char *evt) { this->emitData(255, evt); }
-void PatronusClass::emitData(uint8_t num, const char *evt) {
-  JsonSockEvent *json = sockEmit.beginEmit(evt);
+void PatronusClass::emitData() { this->emitData(255); }
+void PatronusClass::emitData(uint8_t num) {
+  JsonSockEvent *json = sockEmit.beginEmit("patronusData");
   json->beginObject();
   json->addElem("lux", this->lastLux);
   for (uint8_t i = 0; i < this->lastOutputs.nOutputs; i++)
