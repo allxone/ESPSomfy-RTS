@@ -1270,7 +1270,7 @@ var security = new Security();
 
 class General {
     initialized = false; 
-    appVersion = 'v2.4.7';
+    appVersion = 'v2.4.P';
     reloadApp = false;
     init() {
         if (this.initialized) return;
