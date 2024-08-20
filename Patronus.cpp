@@ -28,7 +28,6 @@ void staticNewDataCallback(const bme68xData data, const bsecOutputs outputs, Bse
 
 bool PatronusClass::begin() {
   this->suspended = false;
-  Serial.println("Patronus begin ...");
   return true;
 }
 bool PatronusClass::end() {
@@ -41,7 +40,6 @@ void PatronusClass::reset() {
   this->connect();
 }
 bool PatronusClass::loop() {
-  Serial.println("Patronus loop ...");
   if(settings.Patronus.enabled && !rebootDelay.reboot && !this->suspended) {
     esp_task_wdt_reset();
     if(!this->connected()) this->connect();
@@ -113,7 +111,7 @@ bool PatronusClass::connect() {
   /* Initialize VEML7700 sensor */
   // this->vemlConnected = veml.begin(&Wire);
   this->vemlConnected = false;
-  
+
   return true;
 }
 bool PatronusClass::disconnect() {
