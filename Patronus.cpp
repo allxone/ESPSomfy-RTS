@@ -14,38 +14,49 @@ extern MQTTClass mqtt;
 extern SocketEmitter sockEmit;
 
 Bsec2 bsec2;
-//Adafruit_VEML7700 veml = Adafruit_VEML7700();
+// Adafruit_VEML7700 veml = Adafruit_VEML7700();
 
-PatronusClass* callbackInstance = nullptr;
-
+PatronusClass *callbackInstance = nullptr;
 
 void staticNewDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec)
 {
-  if (callbackInstance) {
+  if (callbackInstance)
+  {
     callbackInstance->bmeNewDataCallback(data, outputs, bsec);
+  }
+  else
+  {
+    Serial.println("BME688 can't callback!");
   }
 }
 
-bool PatronusClass::begin() {
+bool PatronusClass::begin()
+{
   this->suspended = false;
   return true;
 }
-bool PatronusClass::end() {
+bool PatronusClass::end()
+{
   this->suspended = true;
   this->disconnect();
   return true;
 }
-void PatronusClass::reset() {
+void PatronusClass::reset()
+{
   this->disconnect();
   this->connect();
 }
-bool PatronusClass::loop() {
-  if(settings.Patronus.enabled && !rebootDelay.reboot && !this->suspended) {
+bool PatronusClass::loop()
+{
+  if (settings.Patronus.enabled && !rebootDelay.reboot && !this->suspended)
+  {
     esp_task_wdt_reset();
-    if(!this->connected()) this->connect();
+    if (!this->connected())
+      this->connect();
   }
 
-  if(settings.Patronus.enabled && !this->suspended) {
+  if (settings.Patronus.enabled && !this->suspended)
+  {
 
     // Query VEML7700
     // this->lastLux = veml.readLux(VEML_LUX_AUTO);
@@ -56,26 +67,30 @@ bool PatronusClass::loop() {
       return this->bmeCheckBsecStatus(bsec2);
     }
 
-    if(millis() - this->lastEmit > 15000) {
+    if (millis() - this->lastEmit > 15000)
+    {
       // Post our connection status if needed.
       this->lastEmit = millis();
-      if(this->connected()) {
+      if (this->connected())
+      {
         this->emitData();
         this->lastEmit = millis();
       }
       esp_task_wdt_reset(); // Make sure we do not reboot here.
     }
-
   }
   return true;
 }
-void PatronusClass::publish() {
-  if(mqtt.connected()) {
-    //TODO: publish bsec2 data
+void PatronusClass::publish()
+{
+  if (mqtt.connected())
+  {
+    // TODO: publish bsec2 data
     mqtt.publish("patronus/data/lux", String(this->lastLux), true);
   }
 }
-bool PatronusClass::connect() {
+bool PatronusClass::connect()
+{
   this->bsec2Connected = false;
 
   esp_task_wdt_reset(); // Make sure we do not reboot here.
@@ -100,18 +115,18 @@ bool PatronusClass::connect() {
   /* Initialize the bsec2 library and interfaces */
   bsec2.begin(BME68X_I2C_ADDR_LOW, Wire);
 
-	if(bsec2.sensor.checkStatus())
-	{
-		if (bsec2.sensor.checkStatus() == BME68X_ERROR)
-		{
-			Serial.println("BME688 error:" + bsec2.sensor.statusString());
-			return false;
-		}
-		else if (bsec2.sensor.checkStatus() == BME68X_WARNING)
-		{
-			Serial.println("BME688 Warning:" + bsec2.sensor.statusString());
-		}
-	}
+  if (bsec2.sensor.checkStatus())
+  {
+    if (bsec2.sensor.checkStatus() == BME68X_ERROR)
+    {
+      Serial.println("BME688 error:" + bsec2.sensor.statusString());
+      return false;
+    }
+    else if (bsec2.sensor.checkStatus() == BME68X_WARNING)
+    {
+      Serial.println("BME688 Warning:" + bsec2.sensor.statusString());
+    }
+  }
 
   /* Subsribe to the desired BSEC2 outputs */
   if (!bsec2.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_ULP))
@@ -125,21 +140,24 @@ bool PatronusClass::connect() {
   callbackInstance = this;
   bsec2.attachCallback(staticNewDataCallback);
   this->bsec2Connected = true;
+  Serial.println("BME688 connected!");
 
   /* Initialize VEML7700 sensor */
   // this->vemlConnected = veml.begin(&Wire);
   this->vemlConnected = false;
-
   return true;
 }
-bool PatronusClass::disconnect() {
-  //Serial.println("BSEC library callback detached!");
+bool PatronusClass::disconnect()
+{
+  // Serial.println("BSEC library callback detached!");
   this->vemlConnected = false;
   this->bsec2Connected = false;
   return true;
 }
-bool PatronusClass::connected() {
-  if(settings.Patronus.enabled) return this->vemlConnected || this->bsec2Connected;
+bool PatronusClass::connected()
+{
+  if (settings.Patronus.enabled)
+    return this->vemlConnected || this->bsec2Connected;
   return false;
 }
 void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec)
@@ -164,7 +182,8 @@ void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs 
 }
 
 void PatronusClass::emitData() { this->emitData(255); }
-void PatronusClass::emitData(uint8_t num) {
+void PatronusClass::emitData(uint8_t num)
+{
   JsonSockEvent *json = sockEmit.beginEmit("patronusData");
   json->beginObject();
   json->addElem("lux", this->lastLux);
