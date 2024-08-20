@@ -11,7 +11,7 @@ extern MQTTClass mqtt;
 extern SocketEmitter sockEmit;
 
 Bsec2 envSensor;
-Adafruit_VEML7700 veml;
+Adafruit_VEML7700 veml = Adafruit_VEML7700();
 
 PatronusClass* callbackInstance = nullptr;
 
@@ -102,8 +102,7 @@ bool PatronusClass::connect() {
   //               String(envSensor.version.major) + "." + String(envSensor.version.minor) + "." + String(envSensor.version.major_bugfix) + "." + String(envSensor.version.minor_bugfix));
 
   /* Initialize VEML7700 sensor */
-  veml = Adafruit_VEML7700();
-  this->vemlConnected = veml.begin();
+  this->vemlConnected = veml.begin(Wire);
 
   return true;
 }
