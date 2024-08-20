@@ -38,7 +38,6 @@ bool PatronusClass::end() {
 }
 void PatronusClass::reset() {
   this->disconnect();
-  this->lastConnect = 0;
   this->connect();
 }
 bool PatronusClass::loop() {
@@ -47,15 +46,18 @@ bool PatronusClass::loop() {
     esp_task_wdt_reset();
     if(!this->connected()) this->connect();
   }
-  if(settings.Patronus.enabled) {
+
+  if(settings.Patronus.enabled && !this->suspended) {
+
     // Query VEML7700
     this->lastLux = veml.readLux(VEML_LUX_AUTO);
 
     // Query BME688
     if (!envSensor.run())
     {
-      this->bmeCheckBsecStatus(envSensor);
+      return this->bmeCheckBsecStatus(envSensor);
     }
+
   }
   return true;
 }
@@ -91,6 +93,7 @@ bool PatronusClass::connect() {
   };
 
   /* Initialize the bsec2 library and interfaces */
+  Wire.begin();
   this->bsec2Connected = envSensor.begin(BME68X_I2C_ADDR_LOW, Wire);
   if (!this->bsec2Connected)
   {
@@ -109,6 +112,10 @@ bool PatronusClass::connect() {
 
   //Serial.println("BSEC library version " +
   //               String(envSensor.version.major) + "." + String(envSensor.version.minor) + "." + String(envSensor.version.major_bugfix) + "." + String(envSensor.version.minor_bugfix));
+
+  /* Initialize VEML7700 sensor */
+  this->vemlConnected = veml.begin(&Wire);
+
   return true;
 }
 bool PatronusClass::disconnect() {
@@ -121,7 +128,6 @@ bool PatronusClass::connected() {
   if(settings.Patronus.enabled) return this->vemlConnected || this->bsec2Connected;
   return false;
 }
-
 void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec)
 {
   if (!outputs.nOutputs)
@@ -138,8 +144,7 @@ void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs 
     //Serial.println("Reading skipped due to delay filtering");
     return;
   }
-
-  this->lastOutputs = outputs;
+  this->lastOutputs = outputs;  
 }
 
 void PatronusClass::emitData(const char *evt) { this->emitData(255, evt); }

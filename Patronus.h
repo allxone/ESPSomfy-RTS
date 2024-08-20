@@ -8,7 +8,6 @@
 
 class PatronusClass {
   public:
-    uint64_t lastConnect = 0;
     bool suspended = false;
     bool vemlConnected = false;
     bool bsec2Connected = false;
