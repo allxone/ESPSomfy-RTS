@@ -64,7 +64,9 @@ bool PatronusClass::loop()
     // Query BME688
     if (!bsec2.run())
     {
-      return this->bmeCheckBsecStatus(bsec2);
+      if (!this->bmeCheckBsecStatus(bsec2)) {
+        return false;
+      }
     }
 
     if (millis() - this->lastEmit > 15000)
