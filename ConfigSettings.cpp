@@ -776,6 +776,7 @@ bool PatronusSettings::save() {
   return true;
 }
 bool PatronusSettings::load() {
+  Serial.println("Patronus Settings load");
   pref.begin("Patronus");
   this->enabled = pref.getBool("enabled", false);
   this->maxiaq = pref.getShort("maxiaq", 150);

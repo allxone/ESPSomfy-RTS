@@ -1,9 +1,12 @@
+#include "Patronus.h"
+#include <ArduinoJson.h>
 #include <esp_task_wdt.h>
 #include "ConfigSettings.h"
 #include "MQTT.h"
-#include "Utils.h"
+#include "Somfy.h"
 #include "Sockets.h"
-#include "Patronus.h"
+#include "Network.h"
+#include "Utils.h"
 
 extern ConfigSettings settings;
 extern rebootDelay_t rebootDelay;
@@ -25,6 +28,7 @@ void staticNewDataCallback(const bme68xData data, const bsecOutputs outputs, Bse
 
 bool PatronusClass::begin() {
   this->suspended = false;
+  Serial.println("Patronus begin ...");
   return true;
 }
 bool PatronusClass::end() {
@@ -38,6 +42,7 @@ void PatronusClass::reset() {
   this->connect();
 }
 bool PatronusClass::loop() {
+  Serial.println("Patronus loop ...");
   if(settings.Patronus.enabled && !rebootDelay.reboot && !this->suspended) {
     esp_task_wdt_reset();
     if(!this->connected()) this->connect();
@@ -61,9 +66,11 @@ void PatronusClass::publish() {
   }
 }
 bool PatronusClass::connect() {
+  Serial.println("Patronus connect ...");
   esp_task_wdt_reset(); // Make sure we do not reboot here.
 
   Wire.begin();
+  Serial.println("Patronus connect wire began");
 
   /* Initialize VEML7700 sensor */
   this->vemlConnected = veml.begin();
