@@ -105,7 +105,7 @@ bool PatronusClass::connect() {
 		if (bsec2.sensor.checkStatus() == BME68X_ERROR)
 		{
 			Serial.println("BME688 error:" + bsec2.sensor.statusString());
-			return;
+			return false;
 		}
 		else if (bsec2.sensor.checkStatus() == BME68X_WARNING)
 		{
