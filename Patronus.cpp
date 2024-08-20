@@ -76,11 +76,11 @@ void PatronusClass::publish() {
   }
 }
 bool PatronusClass::connect() {
-  Serial.println("Patronus connect ...");
+  this->bsec2Connected = false;
+
   esp_task_wdt_reset(); // Make sure we do not reboot here.
 
   Wire.begin();
-  Serial.println("Patronus connect wire began");
 
   /* Desired subscription list of BSEC2 outputs */
   bsecSensor sensorList[] = {
@@ -98,25 +98,25 @@ bool PatronusClass::connect() {
   };
 
   /* Initialize the bsec2 library and interfaces */
-  Wire.begin();
-  this->bsec2Connected = envSensor.begin(BME68X_I2C_ADDR_LOW, Wire);
-  if (!this->bsec2Connected)
+  if (!envSensor.begin(BME68X_I2C_ADDR_LOW, Wire));
   {
-    return this->bmeCheckBsecStatus(envSensor);
+    Serial.println("BME688 can't begin!");
+    this->bmeCheckBsecStatus(envSensor);
+    return false;
   }
 
   /* Subsribe to the desired BSEC2 outputs */
-  if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP))
+  if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_ULP))
   {
-    return this->bmeCheckBsecStatus(envSensor);
+    Serial.println("BME688 can't subscribe!");
+    this->bmeCheckBsecStatus(envSensor);
+    return false;
   }
 
   /* Whenever new data is available call the newDataCallback function */
   callbackInstance = this;
   envSensor.attachCallback(staticNewDataCallback);
-
-  //Serial.println("BSEC library version " +
-  //               String(envSensor.version.major) + "." + String(envSensor.version.minor) + "." + String(envSensor.version.major_bugfix) + "." + String(envSensor.version.minor_bugfix));
+  this->bsec2Connected = true;
 
   /* Initialize VEML7700 sensor */
   // this->vemlConnected = veml.begin(&Wire);
@@ -148,7 +148,11 @@ void PatronusClass::bmeNewDataCallback(const bme68xData data, const bsecOutputs 
     Serial.println("BME688 warmup!");
     return;
   }
-  this->lastOutputs = outputs;  
+  else
+  {
+    this->lastOutputs = outputs;
+    Serial.println("BME688 data downloaded!");
+  }
 }
 
 void PatronusClass::emitData() { this->emitData(255); }
