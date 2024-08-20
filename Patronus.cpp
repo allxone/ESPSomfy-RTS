@@ -13,7 +13,7 @@ extern rebootDelay_t rebootDelay;
 extern MQTTClass mqtt;
 extern SocketEmitter sockEmit;
 
-Bsec2 envSensor;
+Bsec2 bsec2;
 //Adafruit_VEML7700 veml = Adafruit_VEML7700();
 
 PatronusClass* callbackInstance = nullptr;
@@ -51,9 +51,9 @@ bool PatronusClass::loop() {
     // this->lastLux = veml.readLux(VEML_LUX_AUTO);
 
     // Query BME688
-    if (!envSensor.run())
+    if (!bsec2.run())
     {
-      return this->bmeCheckBsecStatus(envSensor);
+      return this->bmeCheckBsecStatus(bsec2);
     }
 
     if(millis() - this->lastEmit > 15000) {
@@ -98,24 +98,32 @@ bool PatronusClass::connect() {
   };
 
   /* Initialize the bsec2 library and interfaces */
-  if (!envSensor.begin(BME68X_I2C_ADDR_LOW, Wire));
-  {
-    Serial.println("BME688 can't begin!");
-    this->bmeCheckBsecStatus(envSensor);
-    return false;
-  }
+  bsec2.begin(BME68X_I2C_ADDR_LOW, Wire);
+
+	if(bsec2.sensor.checkStatus())
+	{
+		if (bsec2.sensor.checkStatus() == BME68X_ERROR)
+		{
+			Serial.println("BME688 error:" + bsec2.sensor.statusString());
+			return;
+		}
+		else if (bsec2.sensor.checkStatus() == BME68X_WARNING)
+		{
+			Serial.println("BME688 Warning:" + bsec2.sensor.statusString());
+		}
+	}
 
   /* Subsribe to the desired BSEC2 outputs */
-  if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_ULP))
+  if (!bsec2.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_ULP))
   {
     Serial.println("BME688 can't subscribe!");
-    this->bmeCheckBsecStatus(envSensor);
+    this->bmeCheckBsecStatus(bsec2);
     return false;
   }
 
   /* Whenever new data is available call the newDataCallback function */
   callbackInstance = this;
-  envSensor.attachCallback(staticNewDataCallback);
+  bsec2.attachCallback(staticNewDataCallback);
   this->bsec2Connected = true;
 
   /* Initialize VEML7700 sensor */
