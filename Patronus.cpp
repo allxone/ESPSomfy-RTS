@@ -154,6 +154,7 @@ bool PatronusClass::disconnect()
   // Serial.println("BSEC library callback detached!");
   this->vemlConnected = false;
   this->bsec2Connected = false;
+  Serial.println("BME688 disconnected!");
   return true;
 }
 bool PatronusClass::connected()
@@ -265,5 +266,5 @@ bool PatronusClass::bmeCheckBsecStatus(Bsec2 bsec)
     Serial.println(String(bsec.sensor.status));
     return true;
   }
-  return false;
+  return true;
 }
