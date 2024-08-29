@@ -23,11 +23,10 @@ RUN apt-get -qqy install \
     python3-dev \
     python3-distutils \
     python3-pip \
+    python3-venv \
     srecord \
-    xz-utils
-# Clean up
-RUN apt-get update && \
-    apt-get -qqy install python3-venv \
+    xz-utils \
+    # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
@@ -39,8 +38,9 @@ RUN echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode \
     && chmod 0440 /etc/sudoers.d/vscode
 
 USER vscode
-RUN curl -fsSL -o /tmp/get-platformio.py https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py
-RUN python3 /tmp/get-platformio.py
+WORKDIR /home/vscode
+RUN curl -fsSL -o get-platformio.py https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py
+RUN python3 get-platformio.py
 RUN . ~/.platformio/penv/bin/activate \
     && pio pkg install -g -p espressif32 \
     -t espressif/toolchain-xtensa-esp32s3 \
