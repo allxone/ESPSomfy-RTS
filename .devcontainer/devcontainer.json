@@ -1,0 +1,32 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/debian
+{
+	"name": "PlatformIO in Devcontainer",
+	"dockerFile": "Dockerfile"
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	,
+	"features": {},
+	"runArgs": [
+		// --privileged grants access to /dev on host. Arduino will most likely be /dev/ttysN
+		"--privileged",
+		"--network=host"
+	]
+	// "mounts": [
+	// 	// Mount the host's device to this container's.
+	// 	"source=/dev,target=/dev,type=bind,consistency=consistent"
+	// ],
+	,
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-azuretools.vscode-docker",
+				"ms-vscode.cpptools",
+				"platformio.platformio-ide"
+			],
+			"settings": {
+				"terminal.integrated.shell.linux": "/bin/bash"
+			}
+		}
+	}
+	, "remoteUser": "vscode"
+}
