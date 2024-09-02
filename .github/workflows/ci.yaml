@@ -75,7 +75,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
         with:
-          path: SomfyController
+          path: source
 
       - name: Get LittleFS
         uses: actions/download-artifact@v4
@@ -118,7 +118,8 @@ jobs:
       - name: Build ${{ matrix.name }}
         run: |
           mkdir -p build
-          arduino-cli compile --clean --output-dir build --fqbn ${{ matrix.fqbn }} --warnings default ./SomfyController/src
+          cp -rf source/src SomfyController
+          arduino-cli compile --clean --output-dir build --fqbn ${{ matrix.fqbn }} --warnings default ./SomfyController
 
       - name: ${{ matrix.name }} Image
         run: |
